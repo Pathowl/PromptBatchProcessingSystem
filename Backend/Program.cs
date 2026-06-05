@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Backend.Workers;
 using MassTransit;
+using System.Text.Json.Serialization;
 
 Env.Load();
 
@@ -25,13 +26,14 @@ var connectionString = $"Host=localhost;Port=5432;Database=PromptDb;Username=adm
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddControllers(); // Rejestruje kontrolery
+builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+        // allows sending strings instead of numbers for enums, for better readability in API responses
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }); // Rejestruje kontrolery
 
 // Add services to the container.
 builder.Services.AddOpenApi();
-
-// controller
-builder.Services.AddControllers();
 
 // masstransit
 builder.Services.AddMassTransit(x =>
