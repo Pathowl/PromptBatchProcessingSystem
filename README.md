@@ -29,7 +29,7 @@ Asynchroniczna aplikacja do przetwarzania promptow użytkownika.
 ## AI Integration
 
 Niestety mimo prób okazało się, przynajmniej z tego co znalazłem, że gemini zaostrzyło dostęp do modeli, i mimo odpowiednik API kluczy oraz szukania najłatwiejszego modelu i zrobienia kodu, nie udało mi się uzyskać response, mimo, że kod pukał i działał.
-![Zrzut ekranu](images/Zrzut-ekranu-2026-06-05 214214.png)
+![Zrzut ekranu](images/screen.png)
 Probowałem też nowej rzeczy na modelu z którym nigdy nie pracowałem i w aplikacji, z której też średnio korzystałem :D.<br>
 Chciałem postawić lokalnego LLMa Ollamę, ale po zobaczeniu ze sam silnik bez modelu posiada 3,5GB stwierdziłem, że raczej nie chcielibyście tego specjalnie pobierac żeby odpalić aplikacje. <br>
 myślałem też na zrobieniu flagi do pobrania ollamy lub korzystania z mocka, ale nie chciałem przekombinowywać więc zostałem przy mock Response, jednocześnie zostawiając wykomentowany kod do GeminiService. <br>
