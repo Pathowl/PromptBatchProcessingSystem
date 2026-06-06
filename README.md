@@ -65,6 +65,12 @@ Dzięki Docker Compose nie trzeba wpisywać długich komend czy instalowac osobn
 docker compose up -d
 ```
 
+### Haslo do DB
+Dodaj plik .env w Backend/ i wpisz w nim hasło do bazy, w tym przypadku na potrzeby projektu:
+```bash
+DB_PASSWORD=SecretPassword123!
+```
+
 ### 2. Uruchom Backend
 
 Przejdź do folderu backendu i uruchom aplikację. Migracje bazy danych (PostgreSQL) wykonają się automatycznie przy starcie i resetują sie z każdym resetem backendu:
@@ -83,6 +89,11 @@ cd Backend
 npm intall
 npm run dev
 ```
+### 4. Przejdź na Frontend
+
+Wpisz w przeglądarkę: http://localhost:5173/
+
+Wszystko powinno działać! (Przetestowałem na innym kompie od zera ;D)
 
 ## 🔮 Co planuję poprawić (Future Improvements)
 
