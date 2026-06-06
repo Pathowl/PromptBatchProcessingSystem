@@ -43,7 +43,7 @@ W przypadku posiadania klucza API Gemini, wystarczy podmienić klucz cleanApiKey
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "GeminiApiKey": "Your_Gemini_API_Key_Here"
+  "cleanApiKey": "Your_Gemini_API_Key_Here"
 }
 ```
 
@@ -66,7 +66,9 @@ docker compose up -d
 ```
 
 ### Haslo do DB
+
 Dodaj plik .env w Backend/ i wpisz w nim hasło do bazy, w tym przypadku na potrzeby projektu:
+
 ```bash
 DB_PASSWORD=SecretPassword123!
 ```
@@ -89,6 +91,7 @@ cd Backend
 npm intall
 npm run dev
 ```
+
 ### 4. Przejdź na Frontend
 
 Wpisz w przeglądarkę: http://localhost:5173/
