@@ -1,6 +1,6 @@
 # 🚀 Prompt Processing System
 
-Asynchroniczna aplikacja do przetwarzania promptow użytkownika.
+An asynchronous application designed for scalable user prompt processing.
 
 ## 🛠️ Tech Stack
 
@@ -11,30 +11,27 @@ Asynchroniczna aplikacja do przetwarzania promptow użytkownika.
 
 ## 🧠 The Architecture
 
-1. **Frontend Submission:** Interfejs w Reakcie pakuje prompty i wysyła wszystkie na raz do API.
-2. **API & Database:** Kontroler w .NET odbiera DTO, zapisuje go w bazie ze statusem Pending (Oczekujące) i przez MassTransita wrzuca powiadomienie PromptCreated na kolejke. API od razu rzuca na frontend status 200
-3. **RabbitMQ:** Nasz prompt ląduje w RabbitMQ. RabbitMQ trzyma je w kolejce i czeka, aż Worker ją przejmie. (Ustawione specjalniew wokerze, 1 zadanie na raz)
-4. **Background Worker:** PromptWorker zgarnia zadanie z kolejki RabbitMQ. Podmienia status w bazie na Processing (Przetwarzanie), czeka 5 sekund (żeby zasymulować opóźnienie AI), a dopiero potem uderza do API Gemini.
-   (Tutaj mialo byc API Gemini, ale niestety od ostatniego projektu Google zablokowalo darmowe prompty, zostawilem wiec kod do gemini service jako wykomentowany, wiecej o tym pozniej)
-5. **Wyniki i bledy:** Kiedy Gemini w końcu wypluje odpowiedź, Worker zapisuje ją w bazie i zmienia status na Completed.
-6. **Frontend Polling:** Przez cały ten czas apka w Reakcie co sekundę, puka do API po najnowsze dane (GET /prompts). Dzięki temu na ekranie wszystko zmienia się płynnie i na żywo (Pending ➔ Processing ➔ Completed / Failed).
+1. **Frontend Submission:** The React interface batches user prompts and sends them simultaneously to the API.
+2. **API & Database:** A .NET controller receives the DTO, saves it to the database with a Pending status, and utilizes MassTransit to publish a PromptCreated event to the message queue. The API immediately returns a 200 OK status to the frontend.
+3. **RabbitMQ:** The prompt event is queued in RabbitMQ, waiting for a worker to pick it up. The worker is specifically configured to process one task at a time to ensure stability.
+4. **Background Worker:** PromptWorker retrieves the task from RabbitMQ, updates the database status to Processing, and simulates a 5-second delay (to mimic AI generation time) before executing the AI integration logic.
+5. **Wyniki i bledy:** Once the AI service (or mock) generates a response, the worker saves the result to the database and updates the status to Completed (or Failed if an error occurred).
+6. **Frontend Polling:** The React application polls the API (GET /prompts) every second to fetch the latest data. This guarantees a fluid, real-time UI experience where statuses update dynamically (Pending ➔ Processing ➔ Completed / Failed).
 
 ## ✨ Key Features
 
-- **Procesowanie:** UI nigdy nie "zamarza", nawet gdy przetwarzanie na backendzie trwa kilka lub kilkanaście sekund.
-- **Batching:** Użytkownik może wysłać wiele promptów jednocześnie (na froncie obsłużone za pomocą `Promise.allSettled`).
-- **Error handling:** Mozliwość przetestowania (wysłanie dokładnie słowa `"error"` wyrzuci w backendzie błąd, który pokaże normalnie nie użyty status `Failed`)
-- **Real-time UX:** Czytelne i dynamiczne statusy zrealizowane za pomocą dedykowanego komponentu `StatusBadge`.
+- **Processing:** The frontend remains fully responsive, even when background processing takes several seconds.
+- **Batching:** Users can submit multiple prompts at once (handled seamlessly on the frontend using Promise.allSettled).
+- **Error handling:** Sending the exact phrase `error` will intentionally trigger a backend exception, demonstrating how the system gracefully handles and displays the Failed status.
+- **Real-time UX:** Clear and dynamic status tracking implemented via a custom `StatusBadge` component.
 
 ## AI Integration
 
-Niestety mimo prób okazało się, przynajmniej z tego co znalazłem, że gemini zaostrzyło dostęp do modeli, i mimo odpowiednik API kluczy oraz szukania najłatwiejszego modelu i zrobienia kodu, nie udało mi się uzyskać response, mimo, że kod pukał i działał.
-![Zrzut ekranu](images/screen.png)
-Probowałem też nowej rzeczy na modelu z którym nigdy nie pracowałem i w aplikacji, z której też średnio korzystałem :D.<br>
-Chciałem postawić lokalnego LLMa Ollamę, ale po zobaczeniu ze sam silnik bez modelu posiada 3,5GB stwierdziłem, że raczej nie chcielibyście tego specjalnie pobierac żeby odpalić aplikacje. <br>
-myślałem też na zrobieniu flagi do pobrania ollamy lub korzystania z mocka, ale nie chciałem przekombinowywać więc zostałem przy mock Response, jednocześnie zostawiając kod GeminiService z fallbackiem w przypadku braku klucza. <br>
-Zrobiłem już to na potrzeby tego projektu, po co ma się marnować?<br>
-W przypadku posiadania klucza API Gemini, wystarczy podmienić klucz cleanApiKey w Development/appsettings.Development.json
+Initially, this project was built to integrate directly with the Google Gemini API. However, due to recent restrictions on free-tier access, live requests became inconsistent. I considered hosting a local LLM via Ollama, but opted against it so that anyone reviewing this repository wouldn't have to download a 3.5GB+ model just to run the application locally.
+
+To keep the setup lightweight, the application currently defaults to a Mock Response Service. However, the fully functional GeminiService implementation is still in the codebase!
+
+If you have a valid Gemini API key, you can easily switch to the live model by updating the cleanApiKey property in Backend/appsettings.Development.json:
 
 ```bash
   "Logging": {
@@ -47,19 +44,19 @@ W przypadku posiadania klucza API Gemini, wystarczy podmienić klucz cleanApiKey
 }
 ```
 
-## 🚀 Jak uruchomić lokalnie
+## 🚀 How to Run Locally
 
-Zdecydowałem się na użycie Dockera, ze względu na to, że wydaje się to łatwiejsze dla użytkowników niż instalowanie osobno RabbitMQ czy PostgreSQL. Co ciekawe jak już wcześniej wspominałem, średnio miałem okazję go używać, ale w sumie fajna sprawa :D
+The project utilizes Docker to streamline the setup process, eliminating the need to manually install and configure RabbitMQ or PostgreSQL.
 
 ### Wymagania
 
-- [.NET 10.0 SDK] (lub nowszy)
+- [.NET 10.0 SDK] (or newer)
 - [Node.js]
-- [Docker Desktop] (do postawienia bazy danych i kolejki RabbitMQ)
+- [Docker Desktop] (required for the database and message queue)
 
-### 1. Uruchom infrastrukturę (RabbitMQ & PostgreSQL)
+### 1. Start the Infrastructure (RabbitMQ & PostgreSQL)
 
-Dzięki Docker Compose nie trzeba wpisywać długich komend czy instalowac osobno aplikacji. W głównym folderze projektu (tam gdzie znajduje się plik `docker-compose.yml`) odpal:
+Using Docker Compose, you can spin up the required services in the background. In the root directory (where the `docker-compose.yml` file is located), run:
 
 ```bash
 docker compose up -d
@@ -73,43 +70,50 @@ Dodaj plik .env w Backend/ i wpisz w nim hasło do bazy, w tym przypadku na potr
 DB_PASSWORD=SecretPassword123!
 ```
 
-### 2. Uruchom Backend
+### 2. Configure the Database
 
-Przejdź do folderu backendu i uruchom aplikację. Migracje bazy danych (PostgreSQL) wykonają się automatycznie przy starcie i resetują sie z każdym resetem backendu:
+Create a `.env` file inside the `Backend/` directory and add the database password required for this local environment:
 
 ```bash
 cd Backend
 dotnet run
 ```
 
-### 3. Uruchom Frontend
+### 3. Run the Backend
 
-Przejdź do folderu frontendowego, zainstaluj zależności i odpal serwer deweloperski Vite:
+Navigate to the backend directory and start the application. Entity Framework Core migrations will automatically run on startup to create and seed the database schema:
 
 ```bash
 cd Backend
+npm run dev
+```
+
+### 4. Run the Frontend
+
+```bash
+cd Frontend
 npm install
 npm run dev
 ```
 
-### 4. Przejdź na Frontend
+### 5. Access the Application
 
-Wpisz w przeglądarkę: http://localhost:5173/
+Open your browser and navigate to: http://localhost:5173/
 
-Wszystko powinno działać! (Przetestowałem na innym kompie od zera ;D)
+### 6. Running Tests
 
-Dodane są również 2 proste testy, można je odpalić przechodząc do Tests/ i uruchamiając
-```bash
-dotnet test
-```
-## 🔮 Co planuję poprawić (Future Improvements)
+The project includes basic automated tests. To run them, navigate to the Tests/ directory and execute:
+`dotnet test`
 
-- **Integracja AI:** Połączenie z prawdziwym AI
-- **Unit Tests Expansion:** Większa ilość testów
-- **Logging:** Można by dodać zewnętrzna logowania, z reguły robiłem to w Azure insights
-- **Containerization:** Przygotowanie `Dockerfile` dla samej aplikacji, aby można ją było uruchomić w 100% w kontenerach. Były próby ogarnięcia tego, ale za dużo czasu szło na problemy Linuxowe z WSL, więc stwierdziłem ze na potrzeby projektu to pominę.
+## 🔮 Future Improvements
 
-## Notatnik
+- **Live AI Integration:** Implement a permanent, reliable connection to an active LLM API.
+- **Unit Tests Expansion:** Add more comprehensive Unit and Integration tests.
+- **Logging:** Integrate external logging telemetry (e.g., Application Insights or Serilog).
+- **Containerization:** Create dedicated `Dockerfile` configurations for the .NET API and React frontend so the entire system can be spun up purely through Docker
 
-Chcesz zobaczyć, jak wyglądała droga od zera do działającego systemu? W pliku [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md) prowadziłem zapiski z procesu tworzenia backendu! <br> <br>
-PS. Na przestrzeni projektu jak i notatek mozna sie spotkać rownież z komentarzami w języku polskim i angielskm, po prostu zapisywalem w jakim języku najsprawniej mi cos wpadło do głowy, stwierdzilem ze nie bede ujednolicał, myślę, że nie ma to większego znaczenia,<br> Na potrzeby tego projektu przedstawiam readme w dosyć niekonwencjonalnym stylu (nie dość że po polsku, to jeszcze luźno. Profesjonalne Readme zrobiłbym zupełnie inaczej!)
+## Development Log
+
+Interested in seeing how this system was built from the ground up? Check out the DEVELOPMENT_LOG.md file, where I documented my step-by-step progress, challenges, and architectural decisions during the development process!
+
+(Note: Throughout the codebase and the development log, you might occasionally find comments written in both English and Polish, reflecting my raw thought process as the project evolved.)
