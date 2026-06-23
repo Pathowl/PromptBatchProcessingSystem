@@ -116,4 +116,4 @@ The project includes basic automated tests. To run them, navigate to the Tests/ 
 
 Interested in seeing how this system was built from the ground up? Check out the DEVELOPMENT_LOG.md file, where I documented my step-by-step progress, challenges, and architectural decisions during the development process!
 
-(Note: Throughout the codebase and the development log, you might occasionally find comments written in both English and Polish, reflecting my raw thought process as the project evolved, but for the sake of keeping the thinking process raw, i decided to keep it polish :))
+(Note: Throughout the codebase and the development log, you might occasionally find comments written in both English and Polish, reflecting my raw thought process as the project evolved. For the development.md, for the sake of keeping the thinking process raw, i decided to keep it polish :))
